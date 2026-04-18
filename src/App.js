@@ -121,7 +121,7 @@ function App() {
     const data = JSON.parse(text);
 
     alert("File uploaded successfully!");
-    console.log("Columns:", data.data?.columns);
+    console.log("Columns:", data?.data?.columns || []);
 
   } catch (err) {
     console.error("UPLOAD ERROR:", err);
