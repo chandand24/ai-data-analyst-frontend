@@ -96,38 +96,47 @@ function App() {
     setQuery("");
   };
 
-  //  FILE UPLOAD (FIXED)
+  //  FILE UPLOAD 
   const uploadFile = async (file) => {
-    if (!file) return;
+  if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
+  const formData = new FormData();
+  formData.append("file", file);
 
+  try {
+    console.log("Uploading to:", `${API}/upload`);
+
+    const res = await fetch(`${API}/upload`, {
+      method: "POST",
+      body: formData,
+    });
+
+    console.log("STATUS:", res.status);
+
+    let data;
+    const text = await res.text();
     try {
-      const res = await fetch(`${API}/upload`, {
-        method: "POST",
-        body: formData
-      });
-
-      console.log("STATUS:", res.status);
-
-      if (!res.ok) {
-        const errText = await res.text();
-        console.error("UPLOAD ERROR:", errText);
-        alert("Upload failed");
-        return;
-      }
-
-      const data = await res.json();
-
-      alert("File uploaded successfully!");
-      console.log("Columns:", data?.data?.columns || []);
-
-    } catch (err) {
-      console.error("NETWORK ERROR:", err);
-      alert("Upload failed");
+      data = JSON.parse(text);
+    } catch {
+      console.error("Not JSON response:", text);
+      alert("Upload failed (invalid response)");
+      return;
     }
-  };
+
+    if (!res.ok) {
+      console.error("Backend error:", data);
+      alert("Upload failed");
+      return;
+    }
+
+    alert("File uploaded successfully!");
+    console.log("Columns:", data?.data?.columns);
+
+  } catch (err) {
+    console.error("UPLOAD ERROR:", err);
+    alert("Upload failed (network error)");
+  }
+};
 
   return (
     <div style={{ padding: "20px" }}>
