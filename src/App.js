@@ -3,7 +3,7 @@ import { Bar, Pie, Line } from "react-chartjs-2";
 import "chart.js/auto";
 
 function App() {
-
+  console.log("Upload function called");
   // Backend URL
   const API = "https://ai-data-analyst-backend-paiz.onrender.com";
 
@@ -28,7 +28,6 @@ function App() {
     const userMessage = { type: "user", text: query };
     const thinkingMessage = { type: "bot", text: "Thinking..." };
 
-    // Add both messages safely
     setMessages(prev => [...prev, userMessage, thinkingMessage]);
 
     try {
@@ -176,12 +175,15 @@ function App() {
 
       {/*  INPUT */}
       <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Ask something..."
-        style={{ width: "80%", padding: "10px" }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") sendQuery();
+        type="file"
+        onChange={(e) => {
+          const file = e.target.files[0];
+          console.log("Selected file:", file);
+          if (file) {
+            uploadFile(file);
+          } else {
+            console.log("No file selected");
+          }
         }}
       />
 
