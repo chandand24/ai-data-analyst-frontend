@@ -3,11 +3,9 @@ import { Bar, Pie, Line } from "react-chartjs-2";
 import "chart.js/auto";
 
 function App() {
-  console.log("Upload function called");
-  // Backend URL
+
   const API = "https://ai-data-analyst-backend-paiz.onrender.com";
 
-  // 🧠 States
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState([]);
   const [chartData, setChartData] = useState(null);
@@ -19,18 +17,20 @@ function App() {
     chatRef.current?.scrollTo(0, chatRef.current.scrollHeight);
   }, [messages]);
 
-  // SEND QUERY (FIXED VERSION)
+  // SEND QUERY
   const sendQuery = async () => {
+
     if (!query) return;
 
     setChartData(null);
 
-    const userMessage = { type: "user", text: query };
-    const thinkingMessage = { type: "bot", text: "Thinking..." };
+    const userMsg = { type: "user", text: query };
+    const loadingMsg = { type: "bot", text: "Thinking..." };
 
-    setMessages(prev => [...prev, userMessage, thinkingMessage]);
+    setMessages(prev => [...prev, userMsg, loadingMsg]);
 
     try {
+
       const res = await fetch(
         `${API}/ai-query?q=${encodeURIComponent(query)}`
       );
@@ -63,10 +63,10 @@ function App() {
           setChartData({
             type: data.parsed.chart_type || "bar",
             data: {
-              labels: chartJson?.labels || [],
+              labels: chartJson.labels,
               datasets: [{
                 label: data.parsed.value_col,
-                data: chartJson?.values || [],
+                data: chartJson.values,
                 backgroundColor: [
                   "#36A2EB",
                   "#FF6384",
@@ -77,14 +77,10 @@ function App() {
               }]
             }
           });
-
-        } else {
-          console.log("Chart error:", chartJson.error);
         }
       }
 
     } catch (err) {
-
       setMessages(prev => {
         const updated = [...prev];
         updated[updated.length - 1] = { type: "bot", text: "Server error" };
@@ -95,57 +91,52 @@ function App() {
     setQuery("");
   };
 
-  //  FILE UPLOAD 
+  // FILE UPLOAD (CORRECT)
   const uploadFile = async (file) => {
-  if (!file) return;
 
-  const formData = new FormData();
-  formData.append("file", file);
+    if (!file) return;
 
-  try {
-    console.log("Uploading to:", `${API}/upload`);
+    const formData = new FormData();
+    formData.append("file", file);
 
-    const res = await fetch(`${API}/upload`, {
-      method: "POST",
-      body: formData,
-    });
-
-    console.log("STATUS:", res.status);
-
-    let data;
-    const text = await res.text();
     try {
-      data = JSON.parse(text);
-    } catch {
-      console.error("Not JSON response:", text);
-      alert("Upload failed (invalid response)");
-      return;
-    }
 
-    if (!res.ok) {
-      console.error("Backend error:", data);
+      console.log("Uploading to:", `${API}/upload`);
+
+      const res = await fetch(`${API}/upload`, {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert("Upload failed");
+        return;
+      }
+
+      alert("File uploaded successfully!");
+      console.log("Columns:", data?.data?.columns);
+
+    } catch (err) {
+      console.error(err);
       alert("Upload failed");
-      return;
     }
-
-    alert("File uploaded successfully!");
-    console.log("Columns:", data?.data?.columns);
-
-  } catch (err) {
-    console.error("UPLOAD ERROR:", err);
-    alert("Upload failed (network error)");
-  }
-};
+  };
 
   return (
+
     <div style={{ padding: "20px" }}>
 
       <h1>AI Data Analyst Dashboard</h1>
 
-      {/* FILE UPLOAD */}
+      {/* FILE UPLOAD (ONLY ONE) */}
       <input
         type="file"
-        onChange={(e) => uploadFile(e.target.files[0])}
+        onChange={(e) => {
+          const file = e.target.files[0];
+          if (file) uploadFile(file);
+        }}
       />
 
       {/* CHAT BOX */}
@@ -159,37 +150,33 @@ function App() {
           marginTop: "10px"
         }}
       >
+
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            style={{
-              textAlign: msg.type === "user" ? "right" : "left",
-              margin: "10px"
-            }}
-          >
+          <div key={i} style={{
+            textAlign: msg.type === "user" ? "right" : "left",
+            margin: "10px"
+          }}>
             <b>{msg.type === "user" ? "You" : "AI"}:</b>
             <p>{msg.text}</p>
           </div>
         ))}
+
       </div>
 
-      {/*  INPUT */}
+      {/* QUERY INPUT (FIXED) */}
       <input
-        type="file"
-        onChange={(e) => {
-          const file = e.target.files[0];
-          console.log("Selected file:", file);
-          if (file) {
-            uploadFile(file);
-          } else {
-            console.log("No file selected");
-          }
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Ask something..."
+        style={{ width: "80%", padding: "10px" }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") sendQuery();
         }}
       />
 
       <button onClick={sendQuery}>Send</button>
 
-      {/* CHARTS */}
+      {/* CHART */}
 
       {chartData && chartData.type === "bar" && (
         <div style={{ marginTop: "20px" }}>
