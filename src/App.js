@@ -3,14 +3,14 @@ import { Bar, Pie, Line } from "react-chartjs-2";
 import "chart.js/auto";
 
 function App() {
-
+  const API = "https://ai-data-analyst-backend-paiz.onrender.com";
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState([]);
   const [chartData, setChartData] = useState(null);
 
   const chatRef = useRef(null);
 
-  // 🔄 Auto-scroll
+  // Auto-scroll
   useEffect(() => {
     chatRef.current?.scrollTo(0, chatRef.current.scrollHeight);
   }, [messages]);
@@ -23,39 +23,38 @@ function App() {
     // clear chart
     setChartData(null);
 
-    // ✅ Add user message
+    // Add user message
     setMessages(prev => [...prev, { type: "user", text: query }]);
 
-    // ✅ Add "Thinking..."
+    // Add "Thinking..."
     setMessages(prev => [...prev, { type: "bot", text: "Thinking..." }]);
 
     try {
 
       const res = await fetch(
-        `http://127.0.0.1:8000/ai-query?q=${encodeURIComponent(query)}`
+        `${API}/ai-query?q=${encodeURIComponent(query)}`
       );
 
       const data = await res.json();
 
-      // 🧠 AI response
+      // AI response
       let reply =
         data.insight ||
         data.message ||
         data.error ||
         "No response";
 
-      // ✅ Replace "Thinking..." with real response
       setMessages(prev => {
         const updated = [...prev];
         updated.pop(); // remove "Thinking..."
         return [...updated, { type: "bot", text: reply }];
       });
 
-      // 📊 CHART
+      // CHART
       if (data.parsed?.operation === "groupby") {
 
         const chartRes = await fetch(
-          `http://127.0.0.1:8000/chart?group_col=${data.parsed.group_col}&value_col=${data.parsed.value_col}`
+          `${API}/chart?group_col=${data.parsed.group_col}&value_col=${data.parsed.value_col}`
         );
 
         const chartJson = await chartRes.json();
@@ -98,7 +97,7 @@ function App() {
     setQuery("");
   };
 
-  // 📁 FILE UPLOAD
+  // FILE UPLOAD
   const uploadFile = async (file) => {
 
     if (!file) return;
@@ -108,7 +107,7 @@ function App() {
 
     try {
 
-      const res = await fetch("http://127.0.0.1:8000/upload", {
+      const res = await fetch(`${API}/upload`, {
         method: "POST",
         body: formData
       });
@@ -129,7 +128,7 @@ function App() {
 
       <h1>AI Data Analyst Dashboard</h1>
 
-      {/* 📁 FILE UPLOAD */}
+      {/* FILE UPLOAD */}
       <input
         type="file"
         onChange={(e) => uploadFile(e.target.files[0])}
@@ -159,7 +158,7 @@ function App() {
 
       </div>
 
-      {/* ⌨️ INPUT */}
+      {/*  INPUT */}
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -172,7 +171,7 @@ function App() {
 
       <button onClick={sendQuery}>Send</button>
 
-      {/* 📊 CHART */}
+      {/* CHART */}
 
       {chartData && chartData.type === "bar" && (
         <div style={{ marginTop: "20px" }}>
