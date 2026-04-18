@@ -99,28 +99,35 @@ function App() {
 
   // FILE UPLOAD
   const uploadFile = async (file) => {
+  if (!file) return;
 
-    if (!file) return;
+  const formData = new FormData();
+  formData.append("file", file);
 
-    const formData = new FormData();
-    formData.append("file", file);
+  try {
+    const res = await fetch(`${API}/upload`, {
+      method: "POST",
+      body: formData
+    });
 
-    try {
+    const text = await res.text();   // 👈 IMPORTANT
+    console.log("RAW RESPONSE:", text);
 
-      const res = await fetch(`${API}/upload`, {
-        method: "POST",
-        body: formData
-      });
-
-      const data = await res.json();
-
-      alert("File uploaded successfully!");
-      console.log("Columns:", data.data.columns);
-
-    } catch (err) {
-      alert("Upload failed");
+    if (!res.ok) {
+      alert("Upload failed: " + text);
+      return;
     }
-  };
+
+    const data = JSON.parse(text);
+
+    alert("File uploaded successfully!");
+    console.log("Columns:", data.data?.columns);
+
+  } catch (err) {
+    console.error("UPLOAD ERROR:", err);
+    alert("Upload failed");
+  }
+};
 
   return (
 
